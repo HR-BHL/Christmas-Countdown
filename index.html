@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Christmas Countdown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: cosy, playful, warm — a winter night in a snowy village
+   IDEA: a frosted window onto a snowy hillside, with an advent calendar below
+   PICTURE: lit cottage among pines under falling snow, countdown glowing over it
+   COLOUR and TYPE: deep pine night, snow white, cranberry accent; DM Serif Display + Nunito
+   LAYOUT: full-bleed scene with countdown, then a 24-door advent grid */
+:root{color-scheme:dark;--bg:#0d2620;--deep:#081a15;--ink:#f4f1ea;--soft:#b9cbbf;--berry:#d33a4f;--gold:#f2c46b;--door:#173a30;--door2:#1e4a3d}
+:root[data-theme=light],:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Nunito,system-ui,sans-serif;overflow-x:clip}
+#snow{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
+.hero{position:relative;min-height:min(92vh,760px);display:grid;align-content:start;justify-items:center;text-align:center;padding:clamp(36px,7vw,80px) max(5vw,16px) 0;background:radial-gradient(120% 80% at 50% 0%,#1d4a3e 0%,var(--bg) 55%,var(--deep) 100%);overflow:hidden}
+h1{font:400 clamp(34px,6vw,56px)/1.05 "DM Serif Display",Georgia,serif;margin:0 0 6px;text-wrap:balance}
+.sub{color:var(--soft);margin:0 0 28px;font-size:17px}
+.clock{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(8px,2vw,18px);width:min(640px,100%);position:relative;z-index:2}
+.unit{background:rgba(8,26,21,.55);border:1px solid rgba(244,241,234,.14);border-radius:18px;padding:16px 6px 12px;backdrop-filter:blur(4px)}
+.num{display:block;font:400 clamp(36px,8vw,64px)/1 "DM Serif Display",Georgia,serif;font-variant-numeric:tabular-nums}
+.lbl{display:block;margin-top:6px;font-size:13px;color:var(--soft);font-weight:600}
+.done{font:400 clamp(30px,5vw,46px)/1.1 "DM Serif Display",serif;color:var(--gold)}
+.scene{position:absolute;left:0;right:0;bottom:0;width:100%;height:clamp(220px,38vh,340px);z-index:1}
+.band{padding:clamp(36px,5vw,64px) max(5vw,16px);max-width:1240px;margin:0 auto}
+h2{font:400 clamp(28px,4vw,40px)/1.1 "DM Serif Display",serif;margin:0 0 8px}
+.hint{color:var(--soft);margin:0 0 24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:14px}
+.door{position:relative;aspect-ratio:1;border:0;border-radius:16px;background:linear-gradient(160deg,var(--door2),var(--door));color:var(--ink);font:inherit;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(244,241,234,.12),0 6px 14px rgba(0,0,0,.25);transition:transform .2s;padding:10px}
+.door:hover:not(.locked){transform:translateY(-3px)}
+.door:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.door .d{font:400 40px/1 "DM Serif Display",serif}
+.door.today{box-shadow:inset 0 0 0 2px var(--gold),0 0 22px rgba(242,196,107,.35)}
+.door.locked{cursor:not-allowed;opacity:.5}
+.door.open{background:linear-gradient(160deg,#f4f1ea,#e2dccd);color:#1a2b25}
+.door.open .d{font-size:22px;color:var(--berry)}
+.door small{display:block;font-size:13px;margin-top:6px;font-weight:600}
+.modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(4,14,11,.7);z-index:10;padding:16px}
+.modal.show{display:grid}
+.card{background:#f4f1ea;color:#1a2b25;border-radius:22px;padding:30px 26px 24px;width:min(440px,100%);text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.5);animation:pop .35s ease}
+.card .day{font:400 18px "DM Serif Display",serif;color:var(--berry);margin:0}
+.card h3{font:400 30px/1.15 "DM Serif Display",serif;margin:6px 0 10px}
+.card p{margin:0 0 20px;font-size:17px}
+.btn{min-height:44px;padding:0 22px;border-radius:999px;border:0;background:var(--berry);color:#fff;font:800 16px Nunito,sans-serif;cursor:pointer}
+.btn:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.toggle{margin-top:22px;background:transparent;border:1px solid rgba(244,241,234,.3);color:var(--ink);min-height:44px;padding:0 18px;border-radius:999px;font:600 14px Nunito,sans-serif;cursor:pointer;position:relative;z-index:6}
+footer{text-align:center;color:var(--soft);font-size:13px;padding:0 16px 40px}
+@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
+@media(max-width:600px){.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.door{border-radius:12px;padding:4px}.door .d{font-size:26px}.door.open .d{font-size:16px}.door small{font-size:11px}.unit{border-radius:12px;padding:12px 2px 10px}.lbl{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.card{animation:none}.door{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="snow" aria-hidden="true"></canvas>
+
+<header class="hero">
+  <h1>Christmas is coming</h1>
+  <p class="sub" id="sub">Counting down to 25 December</p>
+  <div class="clock" id="clock" aria-live="polite">
+    <div class="unit"><span class="num" id="dd">–</span><span class="lbl">days</span></div>
+    <div class="unit"><span class="num" id="hh">–</span><span class="lbl">hours</span></div>
+    <div class="unit"><span class="num" id="mm">–</span><span class="lbl">minutes</span></div>
+    <div class="unit"><span class="num" id="ss">–</span><span class="lbl">seconds</span></div>
+  </div>
+  <button class="toggle" id="snowBtn" type="button">Pause the snow</button>
+
+  <svg class="scene" viewBox="0 0 1200 340" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="hill1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9eef0"/><stop offset="1" stop-color="#b8c8cc"/></linearGradient>
+      <linearGradient id="hill2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7f8f6"/><stop offset="1" stop-color="#d4dedd"/></linearGradient>
+      <radialGradient id="glow"><stop offset="0" stop-color="#f2c46b" stop-opacity=".55"/><stop offset="1" stop-color="#f2c46b" stop-opacity="0"/></radialGradient>
+      <g id="pine"><path d="M0-90 L26-40 H14 L34 0 H-34 L-14-40 H-26Z" fill="#123a2e"/><path d="M0-90 L26-40 H14 L20-28 L0-60Z" fill="#1c5443"/><path d="M-22-44 Q0-50 22-44 M-30-4 Q0-12 30-4" stroke="#eef3f2" stroke-width="5" fill="none" stroke-linecap="round"/><rect x="-5" y="0" width="10" height="12" fill="#3a2a20"/></g>
+    </defs>
+    <path d="M0 210 Q200 150 420 190 T820 170 T1200 200 V340 H0Z" fill="url(#hill1)" opacity=".75"/>
+    <g opacity=".75"><use href="#pine" transform="translate(150 210) scale(.7)"/><use href="#pine" transform="translate(220 200) scale(.55)"/><use href="#pine" transform="translate(980 196) scale(.65)"/><use href="#pine" transform="translate(1050 205) scale(.5)"/></g>
+    <circle cx="600" cy="222" r="120" fill="url(#glow)"/>
+    <g transform="translate(540 160)">
+      <rect x="0" y="40" width="120" height="80" fill="#5b2a2e"/>
+      <rect x="0" y="40" width="40" height="80" fill="#4a2226"/>
+      <path d="M-14 46 L60 -6 L134 46Z" fill="#2c1a1c"/>
+      <path d="M-16 48 Q60 -14 136 48 L130 52 Q60 0 -10 52Z" fill="#f7f8f6"/>
+      <rect x="86" y="2" width="14" height="30" fill="#3b2326"/><rect x="83" y="-2" width="20" height="8" rx="3" fill="#f7f8f6"/>
+      <rect x="18" y="64" width="26" height="24" fill="#f2c46b"/><path d="M31 64 V88 M18 76 H44" stroke="#5b2a2e" stroke-width="3"/>
+      <rect x="64" y="72" width="26" height="48" fill="#2c1a1c"/><circle cx="84" cy="98" r="2" fill="#f2c46b"/>
+      <circle cx="77" cy="60" r="9" fill="none" stroke="#1c5443" stroke-width="5"/><circle cx="77" cy="52" r="2.5" fill="#d33a4f"/>
+    </g>
+    <path d="M0 270 Q300 230 600 268 T1200 250 V340 H0Z" fill="url(#hill2)"/>
+    <g><use href="#pine" transform="translate(80 285)"/><use href="#pine" transform="translate(370 280) scale(.85)"/><use href="#pine" transform="translate(440 292) scale(.6)"/><use href="#pine" transform="translate(800 282) scale(.9)"/><use href="#pine" transform="translate(1130 272)"/></g>
+    <path d="M520 340 Q580 300 610 282" stroke="#c9d5d4" stroke-width="22" fill="none" stroke-linecap="round" opacity=".6"/>
+  </svg>
+</header>
+
+<main class="band">
+  <h2>Your advent calendar</h2>
+  <p class="hint" id="hint">One little door for each day of December. No peeking — each one opens on its day.</p>
+  <div class="grid" id="grid"></div>
+</main>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="card">
+    <p class="day" id="mDay"></p>
+    <h3 id="mTitle"></h3>
+    <p id="mText"></p>
+    <button class="btn" id="mClose" type="button">Lovely, thank you</button>
+  </div>
+</div>
+
+<div style="height:24px"></div>
+
+<script>
+{
+const S=[
+["A cosy start","Pop a festive playlist on and make yourself a hot chocolate. Marshmallows are mandatory, not optional."],
+["Fairy-light hour","Turn the big light off tonight and let only the twinkly ones do the work."],
+["Little fact","Mince pies once really did contain minced meat. Thankfully, these days it's mostly fruit and spice."],
+["Treat yourself","Pick one small festive thing you've been eyeing up and let yourself have it. Guilt-free."],
+["Film night","Choose a Christmas film you've seen a hundred times and watch it for the hundred-and-first."],
+["Cat duty","Give Lewis an extra-long fuss today. He's been very good. Probably."],
+["Write it down","Jot three things from this year you're quietly proud of. You've done more than you think."],
+["Little fact","The tradition of Christmas crackers began in London in the 1840s, thanks to a sweet-maker named Tom Smith."],
+["Send some warmth","Message someone you haven't spoken to in a while, just to say hello."],
+["Wrap-along","Wrap a present or two with a festive film on in the background. Sellotape will be found eventually."],
+["Out and about","Wrap up warm and go for a little evening walk to look at other people's Christmas lights."],
+["Bake something","Biscuits, a cake, or simply something that makes the kitchen smell like Christmas."],
+["Slow morning","No alarm if you can manage it. Fluffy socks, warm drink, and absolutely no rushing."],
+["Little fact","Prince Albert helped make the decorated Christmas tree fashionable in Britain in the 1840s."],
+["Craft corner","Make one handmade decoration, tag or card. Wonky counts double."],
+["Cosy reading","Curl up with a book or a chapter of something festive before bed."],
+["Gratitude jar","Name one person who made your year better, and tell them if you can."],
+["Little fact","Britain's first commercial Christmas card was sent in 1843, commissioned by Sir Henry Cole."],
+["Pamper night","Face mask, candle, long bath — whatever feels like a small luxury to you."],
+["Sing it out","Belt out your favourite Christmas song at full volume. Neighbours be warned."],
+["Shortest day","It's around the winter solstice — from here, the days start getting longer again. Hurrah."],
+["Make a list","Write down three little wishes for the year ahead. Dream a bit."],
+["Almost there","Lay out your cosiest outfit for Christmas Day so it's ready and waiting."],
+["Christmas Eve","Hang up your stocking, leave out a mince pie, and get a good night's sleep. Tomorrow's the day!"]
+];
+const $=id=>document.getElementById(id);
+let opened=[];try{opened=JSON.parse(localStorage.getItem('lo-advent')||'[]')}catch(e){}
+const save=()=>{try{localStorage.setItem('lo-advent',JSON.stringify(opened))}catch(e){}};
+const pad=n=>String(n).padStart(2,'0');
+
+function target(now){let y=now.getFullYear();let t=new Date(y,11,25);if(now>=new Date(y,11,26))t=new Date(y+1,11,25);return t}
+function tick(){
+  const now=new Date(),t=target(now);
+  if(now.getMonth()===11&&now.getDate()===25){
+    $('clock').innerHTML='<p class="done" style="grid-column:1/-1">Merry Christmas!</p>';
+    $('sub').textContent='It\'s finally here';return;
+  }
+  let d=Math.max(0,t-now),s=Math.floor(d/1000);
+  $('dd').textContent=Math.floor(s/86400);$('hh').textContent=pad(Math.floor(s%86400/3600));
+  $('mm').textContent=pad(Math.floor(s%3600/60));$('ss').textContent=pad(s%60);
+  $('sub').textContent='Counting down to Christmas Day '+t.getFullYear();
+}
+tick();setInterval(tick,1000);
+
+function render(){
+  const now=new Date(),dec=now.getMonth()===11,today=now.getDate();
+  $('grid').innerHTML=S.map((x,i)=>{
+    const n=i+1,ok=dec&&n<=today,isOpen=ok&&opened.includes(n),isToday=dec&&n===today;
+    const cls=['door',ok?'':'locked',isOpen?'open':'',isToday&&!isOpen?'today':''].join(' ');
+    const inner=isOpen?`<span class="d">${n}</span><small>${x[0]}</small>`:`<span class="d">${n}</span>${ok?'<small>Open me</small>':''}`;
+    return `<button type="button" class="${cls}" data-n="${n}" aria-label="Day ${n}${ok?'':', not yet'}" ${ok?'':'aria-disabled="true"'}>${inner}</button>`;
+  }).join('');
+  if(!dec)$('hint').textContent='One little door for each day of December. They\'re all locked until 1 December — no peeking!';
+}
+render();
+
+$('grid').addEventListener('click',e=>{
+  const b=e.target.closest('.door');if(!b)return;
+  const n=+b.dataset.n;
+  if(b.classList.contains('locked')){
+    $('mDay').textContent='Day '+n;$('mTitle').textContent='Patience, little elf';
+    $('mText').textContent='This door opens on '+n+' December. Good things come to those who wait.';
+  }else{
+    if(!opened.includes(n)){opened.push(n);save()}
+    $('mDay').textContent=n+' December';$('mTitle').textContent=S[n-1][0];$('mText').textContent=S[n-1][1];
+    render();
+  }
+  $('modal').classList.add('show');$('mClose').focus();
+});
+const close=()=>$('modal').classList.remove('show');
+$('mClose').addEventListener('click',close);
+$('modal').addEventListener('click',e=>{if(e.target.id==='modal')close()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+
+const c=$('snow'),x=c.getContext('2d');let W,H,flakes=[],on=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+function size(){W=c.width=innerWidth;H=c.height=innerHeight;const k=Math.min(160,Math.round(W*H/9000));flakes=Array.from({length:k},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*2.4+.6,s:Math.random()*.6+.3,w:Math.random()*Math.PI*2}))}
+size();addEventListener('resize',size);
+function loop(){x.clearRect(0,0,W,H);if(on){x.fillStyle='rgba(255,255,255,.85)';for(const f of flakes){f.y+=f.s;f.w+=.01;f.x+=Math.sin(f.w)*.4;if(f.y>H){f.y=-5;f.x=Math.random()*W}x.beginPath();x.arc(f.x,f.y,f.r,0,7);x.fill()}}requestAnimationFrame(loop)}
+loop();
+const sb=$('snowBtn');sb.textContent=on?'Pause the snow':'Let it snow';
+sb.addEventListener('click',()=>{on=!on;sb.textContent=on?'Pause the snow':'Let it snow'});
+}
+</script>
+</body>
+</html>
